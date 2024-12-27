@@ -1,0 +1,559 @@
+---
+title: "Regression Analysis"
+author: "Emmanuel Ansah"
+date: "12/27/2024"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Packages Used
+```{r}
+library(ggplot2)
+library(rgl)
+```
+
+# PART I
+
+## Importing dataset
+```{r}
+# Reads the data from a CSV file into a dataframe
+data=read.csv("data_simulated.csv")
+
+# Displays the first few rows of the dataframe
+head(data)
+```
+## Checking Column names
+```{r}
+# Retrieves the names of columns in the data frame
+col_n=colnames(data)
+
+# Displays the column names
+col_n
+```
+### Insight: This is a good practice to ensure you know the names of your variables before starting the analysis.
+
+
+
+## Finding correlation coefficient
+```{r}
+# Defines a custom function to calculate Pearson's correlation coefficient.
+correlation=function(x,y){
+  n=length(x)
+  x_bar=mean(x)
+  y_bar=mean(y)
+  var_x=sum((x-x_bar)^2)/(n-1)
+  var_y=sum((y-y_bar)^2)/(n-1)
+  covar_x_y=sum((x-x_bar)*(y-y_bar))/(n-1)
+  cor_x_y=covar_x_y/(var_x*var_y)^0.5
+  return(cor_x_y)
+}
+```
+### Insight: This custom function calculates the correlation coefficient. While R has a built-in cor() function, this provides a good understanding of the underlying formula.
+
+
+
+## Correlation Matrix
+```{r}
+# Creates an empty matrix to store the correlation coefficients
+cor_matrix=matrix(0, 5, 5)
+
+# Assigns column names to the correlation matrix
+colnames(cor_matrix)=names(data)
+
+# Assigns row names to the correlation matrix
+rownames(cor_matrix)=names(data)
+
+# Loops through columns of the dataframe to calculate correlation between each pair of columns
+for (i in 1:5) {
+  for (j in 1:5) {
+    cor_matrix[i,j]=correlation(data[,i], data[,j])
+
+  }
+}
+# Displays the correlation matrix
+cor_matrix
+
+```
+### Insight: This calculates a correlation matrix for all variables in the data_simulated dataset, revealing the pairwise relationships between them. The matrix is symmetrical, with 1's on the diagonal.
+
+
+
+## Visualizing the relationship between the variables
+```{r}
+plot_x_y1 <- ggplot(data[,1:2], aes(x = x, y = y1)) + 
+  geom_point(colour="red")  
+# Creates a scatter plot of 'x' vs 'y1'
+print(plot_x_y1)
+```
+### Insight: Here a scatter plot is generated, visualizing the strong positive relationship between x and y1.  
+
+
+
+
+
+```{r}
+plot_x_y2 <- ggplot(data, aes(x = x, y = y2)) + 
+  geom_point(colour="blue")  
+# Creates a scatter plot of 'x' vs 'y2'
+print(plot_x_y2)
+```
+### Insight: Here a scatter plot is generated, visualizing the strong negative relationship between x and y2.  
+
+
+
+```{r}
+plot_x_y3 <- ggplot(data, aes(x = x, y = y3)) + 
+  geom_point(colour="gold")  
+# Creates a scatter plot of 'x' vs 'y3'
+print(plot_x_y3)
+```
+### Insight: Here a scatter plot is generated, visualizing the weak negative relationship between x and y3.
+
+
+```{r}
+plot_x_y4 <- ggplot(data, aes(x = x, y = y4)) + 
+  geom_point(colour="purple")  
+# Creates a scatter plot of 'x' vs 'y4'
+print(plot_x_y4)
+```
+### Insight: Here a scatter plot is generated, visualizing the non linear relationship between x and y4.
+
+
+
+
+# PART II
+## Simple linear Regression
+
+## Importing Data
+```{r}
+data_s=read.csv("data_salaries.csv")
+head(data_s)
+```
+
+## Manual calculation of correlation Coefficient
+```{r}
+x=data_s$YearsExperience
+y=data_s$Salary
+n=length(x)
+x_bar=mean(x)
+y_bar=mean(y)
+var_x=sum((x-x_bar)^2)/(n-1)
+var_y=sum((y-y_bar)^2)/(n-1)
+covar_x_y=sum((x-x_bar)*(y-y_bar))/(n-1)
+cor_x_y=covar_x_y/(var_x*var_y)^0.5
+paste(cor_x_y)
+```
+### Insight: This code manually calculates the Pearson correlation coefficient between years of experience and salary, showcasing a fundamental statistical calculation.
+
+
+## In-built R function 
+```{r}
+# Calculates the correlation coefficient between x and y using the built-in cor() function
+cor(x,y)
+```
+### Insight: This confirms the calculation in the previous section using R's built-in function, highlighting the simplicity and efficiency of using pre-built functions in R.
+
+
+
+## Calculating regression coefficient
+```{r}
+# Calculates the regression coefficient (slope)
+Beta_1= covar_x_y/var_x
+
+# Displays the regression coefficient
+Beta_1
+
+```
+### Insight: This calculates the slope (Beta_1) of the regression line, showing how much salary is expected to increase for each additional year of experience.
+
+
+
+## Calculating Intercept
+```{r}
+Beta_0=y_bar-(Beta_1*x_bar)
+Beta_0
+```
+### Insight: This calculates the intercept (Beta_0) of the regression line, showing the expected salary when years of experience is zero.
+
+
+
+## Predicting Salary
+```{r}
+x_new=1.1
+
+# Calculates the predicted salary for the new experience value
+y_new=Beta_0+Beta_1*x_new
+
+# Displays the predicted salary
+paste(y_new)
+```
+### Insight: This section uses the calculated regression coefficients to predict the salary for someone with 1.1 years of experience.
+
+
+
+## Finding the correlation Coeff using the slope and variance
+```{r}
+corre_beta1=Beta_1*(var_x/var_y)^0.5
+corre_beta1
+```
+### Insight: This confirms the the relationship between the regression slope and correlation coefficient
+
+
+
+```{r}
+sigma_squared=sum((y-Beta_0-(Beta_1*x))^2)/(n-2)
+sigma_squared
+```
+
+
+
+## Manual variance-covariance matrix 
+```{r}
+var_beta0 = (sum(x^2)/ (n*sum((x-x_bar)^2)))*sigma_squared
+var_beta1 = sigma_squared/ sum((x-x_bar)^2) 
+cov_b1_b2= (-x_bar/ sum((x-x_bar)^2))*sigma_squared
+var_cov=matrix(0,2,2)
+var_cov[1,1]=var_beta0
+var_cov[2,2]=var_beta1
+var_cov[1,2]=var_cov[2,1]=cov_b1_b2
+var_cov
+```
+### Insight: This code calculates the manual variance-covariance matrix for the estimated regression coefficients, which gives insight into the precision and relationship of the estimates. The diagonal of the matrix represents the variance of each coefficient, while off-diagonal elements show the covariance between them.
+
+
+
+## Using lm function
+```{r}
+# Builds a linear model using the built-in lm() function
+model=lm(y~x)
+
+# Displays the variance-covariance matrix of the estimated coefficients using the built-in vcov() function
+vcov(model)
+```
+### Insights:  Comparing these results with the manual calculations helps verify the accuracy of the function.
+
+
+
+
+## summary of model
+```{r}
+summary(model)
+```
+
+
+```{r}
+var(residuals(model))
+
+aov(model)
+```
+
+
+
+
+# PART III  
+## Multiple Linear Regression
+
+## Importing Data
+```{r cars}
+# Reads the data from a CSV file into a dataframe
+data_m <- read.csv("data_medical_charges.csv")
+head(data_m)
+```
+
+### Data Structure
+```{r}
+# Displays the structure of the data
+str(data_m)
+```
+
+
+### Preparing Data Matrices
+```{r}
+# Prepares the dependent and independent variable matrices
+y=matrix(c(data_m$charges), ncol=1 )
+x1=matrix(1, 124,1 )
+x2=matrix(c(data_m$age), ncol = 1)
+x3=matrix(c(data_m$bmi), ncol = 1)
+X=matrix(c(x1,x2,x3),nrow =124 )
+```
+
+
+
+### Estimating Regression Coefficients
+```{r}
+# Estimates the regression coefficients
+beta_cap=solve(t(X)%*%X)%*%t(X)%*%y
+beta_cap
+
+```
+
+### Using lm Function
+```{r}
+# Builds a linear model using the built-in lm() function
+m=lm(y~ data_m$age + data_m$bmi)
+summary(m)
+```
+
+### Varaiance_Covariance
+```{r}
+# Displays the variance-covariance matrix of the estimated coefficients
+vcov(m)
+```
+
+
+### Predicted Values
+```{r}
+# Calculates the predicted values
+y_cap=(X%*%beta_cap)
+```
+
+### Residual Variance
+```{r}
+# Calculates the residual variance
+p=3
+n=124
+var_y=sum((y-y_cap)^2)/(n-p)
+var_y
+
+```
+
+### Covariance Matrix of Coefficients
+```{r}
+# Calculates the covariance matrix of the coefficients
+cov_beta=var_y*solve(t(X)%*%X)
+cov_beta
+```
+
+### Predicting Medical Charges
+```{r}
+# Predicts medical charges for a specific case
+pred_charge= beta_cap[1] + (beta_cap[2]*55) + (beta_cap[3]*30)
+pred_charge
+```
+
+### Extended Model
+```{r}
+# Builds an extended linear model
+model1=lm(charges~ age+bmi+sex, data=data_m)
+summary(model1)
+```
+### Insight: Males have a negative association with medical charges.
+
+
+### Residual Analysis
+```{r}
+# Plots residuals vs. fitted values
+ggplot(model1, aes(x = model1$fitted.values, y = model1$residuals)) +
+  geom_point(color = "blue") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "Residuals vs. fitted", x = "fitted", y = "Residuals") +
+  theme_minimal()
+```
+
+### Q-Q plot of residuals
+```{r}
+qqnorm(model1$residuals)
+qqline(model1$residuals, col = "red")
+```
+
+
+
+
+### Kolmogorov-Smirnov test for normality of residuals
+```{r}
+residuals=model1$residuals
+ks.test(residuals, "pnorm", mean = mean(residuals), sd = sd(residuals))
+```
+
+### Histogram of residuals
+```{r}
+ggplot(model1, aes(x = model1$residuals)) +
+  geom_histogram(binwidth = 300, fill = "green", color = "black") +
+  labs(title = "Histogram of Residuals", x = "Residuals", y = "Count") +
+  theme_minimal()
+```
+
+
+
+
+
+```{r}
+mean(residuals)
+var(residuals)
+```
+
+
+```{r}
+plot(model1, which = 1)
+```
+
+```{r}
+plot(model1, which = 2)
+```
+
+```{r}
+plot(model1, which = 3)
+```
+
+
+```{r}
+plot(model1, which = 4)
+```
+
+```{r}
+plot(model1, which = 5)
+```
+
+```{r}
+plot(model1, which = 6)
+```
+
+
+### Extended Model with Additional Variables
+```{r}
+model2=lm(charges~ age+bmi+sex+children+region, data=data_m)
+```
+
+
+### Model Summaries
+```{r}
+summary(model1)
+```
+
+```{r}
+summary(model2)
+```
+
+
+### ANOVA Comparison
+```{r}
+anova(model1, model2)
+```
+
+
+# PART IV 
+## Logistic Regression
+### Importing Data
+```{r}
+data.mortality=read.csv("data_mortality.csv")
+attach(data.mortality)
+
+```
+
+
+### Data Structure
+```{r}
+head(data.mortality)
+```
+
+```{r}
+str(data.mortality)
+```
+
+
+### Adding Log Rate
+```{r}
+# Adds a new column for log rate
+data.mortality$logRate=log(Deaths/Exposure)
+head(data.mortality)
+```
+
+
+
+### Visualizing Mortality Rates
+```{r}
+# Extracts data for females aged 50
+y_female50=data.mortality$logRate[Gender=="F" & Age == 50]
+x_female50=data.mortality$Year[Gender=="F" & Age == 50]
+
+# Extracts data for males aged 50
+y_male50=data.mortality$logRate[Gender=="M" & Age == 50]
+x_male50=data.mortality$Year[Gender=="M" & Age == 50]
+
+# Plots log mortality rate for females aged 50
+plot(y_female50 ~ x_female50,
+     xlab= "calendar year", ylab= "log(mortality rate)",main="Female", col= "red")
+
+# Plots log mortality rate for males aged 50
+plot(y_male50 ~ x_male50,
+     xlab= "calendar year", ylab= "log(mortality rate)", main= "Male", col="blue")
+```
+
+
+### Combined plot for males and females aged 50
+```{r}
+plot(y_female50 ~ x_female50, ylim=c(min(y_female50,y_male50),max(y_female50,y_male50)),
+     xlab="calendar year", ylab="log(mortality")
+points(y_male50~x_male50,col="red")
+
+```
+
+
+
+
+### Female Mortality Rates Over Years
+```{r}
+# Extracts data for females in 1986 and 2000
+y_female1986=data.mortality$logRate[Gender=="F" & Year == 1986]
+x_female1986=data.mortality$Age[Gender=="F" & Year== 1986]
+
+
+y_female2000=data.mortality$logRate[Gender=="F" & Year == 2000]
+x_female2000=data.mortality$Age[Gender=="F" & Year== 2000]
+
+
+# Plots log mortality rate for females in 1986 and 2000
+plot(y_female1986~x_female1986,xlab="calendar year", ylab="log(mortality")
+
+points(y_female2000~x_female2000,col="red")
+```
+
+
+
+
+### Male Mortality Rates Over Years
+```{r}
+# Extracts data for males in 1986 and 2000
+y_male1986=data.mortality$logRate[Gender=="M" & Year == 1986]
+x_male1986=data.mortality$Age[Gender=="M" & Year== 1986]
+
+
+y_male2000=data.mortality$logRate[Gender=="M" & Year == 2000]
+x_male2000=data.mortality$Age[Gender=="M" & Year== 2000]
+
+# Plots log mortality rate for males in 1986 and 2000
+plot(y_male1986~x_male1986,xlab="calendar year", ylab="log(mortality")
+
+points(y_male2000~x_male2000,col="red")
+
+
+```
+
+
+
+
+
+### Logistic Regression Models
+```{r}
+# Builds a logistic regression model with Age and Year
+m1=glm(cbind(Deaths, Exposure-Deaths)~ Age + Year,
+           data=data.mortality, family = binomial)
+summary(m1)
+```
+
+
+```{r}
+# Builds a logistic regression model with Age, Year, and Gender
+m2=glm(cbind(Deaths, Exposure-Deaths)~ Age + Year + Gender,
+           data=data.mortality, family = binomial)
+
+summary(m2)
+```
+
+
+
